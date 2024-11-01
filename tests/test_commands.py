@@ -5,38 +5,48 @@ This module provides unit tests for classes in `app.commands` handling arithmeti
 It covers the addition, subtraction, multiplication, and division commands, 
 verifying correct output and error handling (e.g., division by zero).
 """
-import pytest
-from app.commands.add import AddCommand
-from app.commands.subtract import SubtractCommand
-from app.commands.multiply import MultiplyCommand
-from app.commands.divide import DivideCommand
+from unittest.mock import patch
+from app.plugins.add import AddCommand
+from app.plugins.subtract import SubtractCommand
+from app.plugins.multiply import MultiplyCommand
+from app.plugins.divide import DivideCommand
 
-def test_add_command():
+def test_add_command(capsys):
     """Verify AddCommand correctly adds two numbers."""
     command = AddCommand()
-    result = command.execute(7, 3)
-    assert result == 10, f"Expected 10, got {result}"
+    with patch("builtins.input", side_effect=["3", "5"]):
+        command.execute()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "The result of 3 + 5 = 8"
 
-def test_subtract_command():
+def test_subtract_command(capsys):
     """Verify SubtractCommand correctly subtracts one number from another."""
     command = SubtractCommand()
-    result = command.execute(15, 8)
-    assert result == 7, f"Expected 7, got {result}"
+    with patch("builtins.input", side_effect=["10", "4"]):
+        command.execute()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "The result of 10 - 4 = 6"
 
-def test_multiply_command():
+def test_multiply_command(capsys):
     """Verify MultiplyCommand correctly multiplies two numbers."""
     command = MultiplyCommand()
-    result = command.execute(6, 4)
-    assert result == 24, f"Expected 24, got {result}"
+    with patch("builtins.input", side_effect=["7", "6"]):
+        command.execute()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "The result of 7 * 6 = 42"
 
-def test_divide_command():
+def test_divide_command(capsys):
     """Verify DivideCommand correctly divides two numbers."""
     command = DivideCommand()
-    result = command.execute(20, 4)
-    assert result == 5, f"Expected 5, got {result}"
+    with patch("builtins.input", side_effect=["8", "2"]):
+        command.execute()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "The result of 8 / 2 = 4.0"
 
-def test_divide_by_zero():
+def test_divide_by_zero(capsys):
     """Ensure DivideCommand raises ValueError on division by zero."""
-    with pytest.raises(ValueError):
-        command = DivideCommand()
-        command.execute(10, 0)
+    command = DivideCommand()
+    with patch("builtins.input", side_effect=["8", "0"]):
+        command.execute()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "DivisionByZero Exception"
