@@ -2,11 +2,14 @@ import os
 import pkgutil
 import importlib
 import sys
+from data.history import HistoryManager
+from data.csv import CsvCommand
 from app.commands import CommandHandler, Command
 
 class App:
     def __init__(self):
         self.command_handler = CommandHandler()
+        self.history_manager = HistoryManager()
 
     def load_plugins(self):
         plugins_package = 'app.plugins'
@@ -36,13 +39,24 @@ class App:
             while True:
                 cmd_input = input(">>> ").strip()
                 if cmd_input.lower() == 'exit':
-                    print("Application exit.")
-                    sys.exit(0)  # Use sys.exit(0) for a clean exit, indicating success.
-                try:
+                    history = self.history_manager.get_history()
+                    if len(history) > 0:
+                        option = input("Do you want to save the history? Y or N :\n")
+                        if option == "Y":
+                            csv_run = CsvCommand(history)
+                            csv_run.execute()
+                            print("Exiting the calculator After Saving to csv.")
+                        elif option == "N":
+                            print("Exiting the calculator Without Saving.")
+
                     self.command_handler.execute_command(cmd_input)
-                except KeyError:  # Assuming execute_command raises KeyError for unknown commands
+                try:
+                    num1, num2 = map(float, input("Enter two numbers space-separated: ").split())
+                    result = self.command_handler.execute_command(cmd_input, num1, num2, self.history_manager)
+                    print(f"Result of {cmd_input} operation between {num1} and {num2} is: {result}")
+                except KeyError:
                     print(f"Unknown command: {cmd_input}")
-                    sys.exit(1)  # Use a non-zero exit code to indicate failure or incorrect command.
+                    sys.exit(1)
         except KeyboardInterrupt:
             print("Application interrupted and exiting gracefully.")
             sys.exit(0)  # Assuming a KeyboardInterrupt should also result in a clean exit.

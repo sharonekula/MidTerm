@@ -1,7 +1,7 @@
-import sys
 from app.commands import Command
-
+from data.history import HistoryManager
 
 class ExitCommand(Command):
+
     def execute(self):
-        sys.exit("Exiting...")
+        raise SystemExit

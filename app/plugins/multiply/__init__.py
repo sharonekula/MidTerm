@@ -1,8 +1,11 @@
 from app.commands import Command
+from data.history import HistoryManager
 
+history_manager = HistoryManager()
 class MultiplyCommand(Command):
 
-    def execute(self):
-        a = int(input("First number:"))
-        b = int(input("Second number:"))
-        print(f'The result of {a} * {b} = {a * b}')
+    def execute(self,x , y, history_manager):
+        result = x * y
+        history_manager.add_to_history("Multiplication", x, y, result)
+        return result
+
