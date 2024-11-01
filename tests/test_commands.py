@@ -14,10 +14,11 @@ from data.history import HistoryManager
 
 history_manager = HistoryManager()
 def test_add_command():
+    """Verify the AddCommand correctly adds two numbers"""
     add_command = AddCommand()
     result = add_command.execute(3, 4, history_manager)
     assert result == 7, "The addition result should match the expected value."
-    
+
 def test_subtract_command():
     """Verify SubtractCommand correctly subtracts one number from another."""
     command = SubtractCommand()
