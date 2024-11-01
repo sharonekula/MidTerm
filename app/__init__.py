@@ -1,58 +1,64 @@
-from app.commands import CommandRegistry, Command
-from app.plugins.add import AddCommand
-from app.plugins.subtract import SubtractCommand
-from app.plugins.multiply import MultiplyCommand
-from app.plugins.divide import DivideCommand
-from app.plugins.exit import ExitCommand
-from app.commands import CommandRegistry
+import os
+import pkgutil
+import importlib
+import sys
+from data.history import HistoryManager
+from data.csv import CsvCommand
+from app.commands import CommandHandler, Command
 
 class App:
-    
     def __init__(self):
-
-        self.registry = CommandRegistry()
-        self.registry.register_command('add', AddCommand())
-        self.registry.register_command('subtract', SubtractCommand())
-        self.registry.register_command('multiply', MultiplyCommand())
-        self.registry.register_command('divide', DivideCommand())
-        self.registry.register_command('exit', ExitCommand())
+        self.command_handler = CommandHandler()
+        self.history_manager = HistoryManager()
 
     def load_plugins(self):
         plugins_package = 'app.plugins'
-        for _, plugin_name, is_pkg in pkgutil.iter_modules([plugins_package.replace('.', '/')]):
+        plugins_path = plugins_package.replace('.', '/')
+        if not os.path.exists(plugins_path):
+            print(f"Plugins directory '{plugins_path}' not found.")
+            return
+        for _, plugin_name, is_pkg in pkgutil.iter_modules([plugins_path]):
             if is_pkg:
-                plugin_module = importlib.import_module(f'{plugins_package}.{plugin_name}')
-                for item_name in dir(plugin_module):
-                    item = getattr(plugin_module, item_name)
-                    try:
-                        if issubclass(item, (Command)):
-                            self.command_handler.register_command(plugin_name, item())
-                    except TypeError:
-                        continue
-    
-    def execute(self, command, *args):
-        if command != 'exit' and command in self.registry.commands:
-            return self.registry.commands[command].execute(*args)
-        elif command == 'exit':
-            return self.registry.commands[command].execute(*args)
-        else:
-            raise ValueError(f"Command '{command}' not found.")
-    
-    def start(self):
-        history = []
-        app = App()
-        print("Welcome to the my MID TERM PROJECT _ REPL CALCULATOR")
-        while True:
-            command = input("Enter Command to Perform Operation - Add , Subtract , Multiply , Divide\n").lower()
-            if command != 'exit' and command in self.registry.commands:
                 try:
-                    a = float(input("Enter first number: "))
-                    b = float(input("Enter second number: "))
-                    result = app.execute(command, a, b)
-                    print(f"Result: {result}")
-                except Exception as e:
-                    print(f"Error: {e}")
-            elif command == "exit":
-                 app.execute(command)
-            else:
-                print("Command Not Found!")
+                    plugin_module = importlib.import_module(f'{plugins_package}.{plugin_name}')
+                    self.register_plugin_commands(plugin_module, plugin_name)
+                except ImportError as e:
+                    print(f"Error importing plugin {plugin_name}: {e}")
+
+    def register_plugin_commands(self, plugin_module, plugin_name):
+        for item_name in dir(plugin_module):
+            item = getattr(plugin_module, item_name)
+            if isinstance(item, type) and issubclass(item, Command) and item is not Command:
+                self.command_handler.register_command(plugin_name, item())
+                print(f"Command '{plugin_name}' from plugin '{plugin_name}' registered.")
+
+    def start(self):
+        self.load_plugins()
+        print("Application started. Type 'exit' to exit.")
+        try:
+            while True:
+                cmd_input = input(">>> ").strip()
+                if cmd_input.lower() == 'exit':
+                    history = self.history_manager.get_history()
+                    if len(history) > 0:
+                        option = input("Do you want to save the history? Y or N :\n")
+                        if option == "Y":
+                            csv_run = CsvCommand(history)
+                            csv_run.execute()
+                            print("Exiting the calculator After Saving to csv.")
+                        elif option == "N":
+                            print("Exiting the calculator Without Saving.")
+
+                    self.command_handler.execute_command(cmd_input)
+                try:
+                    num1, num2 = map(float, input("Enter two numbers space-separated: ").split())
+                    result = self.command_handler.execute_command(cmd_input, num1, num2, self.history_manager)
+                    print(f"Result of {cmd_input} operation between {num1} and {num2} is: {result}")
+                except KeyError:
+                    print(f"Unknown command: {cmd_input}")
+                    sys.exit(1)
+        except KeyboardInterrupt:
+            print("Application interrupted and exiting gracefully.")
+            sys.exit(0)  # Assuming a KeyboardInterrupt should also result in a clean exit.
+        finally:
+            print("Application shutdown.")

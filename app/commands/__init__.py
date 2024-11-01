@@ -4,7 +4,7 @@ class Command:
     def execute(self,*args):
         pass
 
-class CommandRegistry:
+class CommandHandler:
     def __init__(self):
         self.commands = {}
 
