@@ -4,8 +4,11 @@ omit =
     tests/conftest.py
     tests/__init__.py
     app/__init__.py
+    */site-packages/*
+
 
 [coverage:report]
 exclude_lines =
     @abstractmethod
     sys
+    os
