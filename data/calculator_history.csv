@@ -1,3 +1,7 @@
 Operation,Operand1,Operand2,Result
 Addition,3.0,4.0,7.0
 Division,4.0,2.0,2.0
+Addition,3.0,4.0,7.0
+Subtraction,4.0,3.0,1.0
+Multiplication,5.0,4.0,20.0
+Division,4.0,2.0,2.0
