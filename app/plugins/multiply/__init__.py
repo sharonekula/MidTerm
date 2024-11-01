@@ -8,3 +8,4 @@ class MultiplyCommand(Command):
         result = x * y
         history_manager.add_to_history("Multiplication", x, y, result)
         return result
+
